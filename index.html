@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite App</title>
+</head>
+
+<body>
+  <form>
+    <div>
+      <label for="Name">Name : </label>
+      <input type="text" id="name">
+    </div>
+    <div>
+      <label for="Email">Email : </label>
+      <input type="email" id="email">
+    </div>
+    <div>
+      <label for="Name">Gender : </label>
+      <input type="radio" name="gender" value="male" id="male"> male <input type="radio" name="gender" value="female"
+        id="female"> female
+    </div>
+    <div>
+      <label for="Name">Status : </label>
+      <input type="radio" name="status" value="active" id="active"> active <input type="radio" name="status"
+        value="inactive" id="inactive"> inactive
+    </div>
+    <div>
+      <input type="button" value="create user" id="createUser">
+      <input type="button" value="Get data" id="getData"><input type="button" value="Update data"
+        style="visibility: hidden;" id="updateData">
+    </div>
+  </form>
+  <div id="result"></div>
+
+  <script src="node_modules/jquery/dist/jquery.min.js"></script>
+  <script>
+    $("#getData").click(get);
+    function get() {
+      var settings = {
+        "url": "https://gorest.co.in/public/v2/users",
+        "method": "GET",
+        "timeout": 0,
+        "headers": {
+          "Authorization": "Bearer d357f00f9342edfacfbb042e5a34df8da78ce4627990514a24d6f388d71b81ea"
+        },
+      };
+
+      $.ajax(settings).done(function (response) {
+        createTable(response);
+      });
+    }
+
+    var dataR, index;
+    function createTable(data) {
+      $("#result").empty();
+      dataR = data;
+      $("<table></table>").html($("<tr><th>ID</th><th>Name</th><th>Email</th><th>Gender</th><th>status</th></tr>")).appendTo($("#result"));
+      $.each(data, function (i, v) {
+        $("<tr></tr>").attr("id", v.id).appendTo($("table"))
+        $("<td>" + v.id + "</td><td>" + v.name + "</td><td>" + v.email + "</td><td>" + v.gender + "</td><td>" + v.status + "</td>").appendTo($("#" + v.id))
+        $('<td><input type="button" value="update" onclick="updateData(' + v.id + ')"></td>').appendTo($("#" + v.id))
+        $('<td><input type="button" value="delete" onclick="deleteData(' + v.id + ')"></td>').appendTo($("#" + v.id))
+      })
+    }
+
+    $("#createUser").click(create);
+    function create() {
+      var settings = {
+        "url": "https://gorest.co.in/public/v2/users",
+        "method": "POST",
+        "timeout": 0,
+        "headers": {
+          "Authorization": "Bearer d357f00f9342edfacfbb042e5a34df8da78ce4627990514a24d6f388d71b81ea",
+          "Content-Type": "application/json"
+        },
+        "data": JSON.stringify({
+          name: $("#name").val(),
+          gender: $('input[name="gender"]:checked').val(),
+          email: $("#email").val(),
+          status: $('input[name="status"]:checked').val()
+        }),
+      };
+
+      $.ajax(settings).done(function (response) {
+        get();
+      });
+    }
+
+    function updateData(id) {
+      $.each(dataR, function (i, v) {
+        if (v.id == id)
+          index = i
+      })
+
+      $("#name").val(dataR[index].name);
+      $("#email").prop("disabled", true).val(dataR[index].email);
+      $('#' + dataR[index].gender).prop("checked", true);
+      $('#' + dataR[index].status).prop("checked", true);
+      $("#updateData").css("visibility", "visible")
+    }
+
+    $("#updateData").click(update);
+    function update() {
+      var settings = {
+        "url": "https://gorest.co.in/public/v2/users/" + dataR[index].id,
+        "method": "PATCH",
+        "timeout": 0,
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer d357f00f9342edfacfbb042e5a34df8da78ce4627990514a24d6f388d71b81ea"
+        },
+        "data": JSON.stringify({
+          name: $("#name").val(),
+          gender: $('input[name="gender"]:checked').val(),
+          email: $("#email").val(),
+          status: $('input[name="status"]:checked').val()
+        }),
+      };
+
+      $.ajax(settings).done(function (response) {
+        get();
+      });
+
+      $("#name").val('');
+      $("#email").prop("disabled", false).val('');
+      $('#male').prop("checked", false);
+      $('#female').prop("checked", false);
+      $('#active').prop("checked", false);
+      $('#inactive').prop("checked", false);
+      $("#updateData").css("visibility", "hidden")
+    }
+
+    function deleteData(id) {
+      var settings = {
+        "url": "https://gorest.co.in/public/v2/users/"+ id ,
+        "method": "DELETE",
+        "timeout": 0,
+        "headers": {
+          "Authorization": "Bearer d357f00f9342edfacfbb042e5a34df8da78ce4627990514a24d6f388d71b81ea"
+        },
+      };
+
+      $.ajax(settings).done(function (response) {
+        get();
+      });
+    }
+  </script>
+</body>
+
+</html>
